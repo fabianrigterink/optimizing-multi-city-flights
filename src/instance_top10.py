@@ -25,7 +25,7 @@ city_ids    = mapping.values()
 
 home = 'NYCA-sky'
 
-stays_min = {city_id: 1 for city_id in city_ids if city_id != home}
+stays_min = {city_id: 2 for city_id in city_ids if city_id != home}
 stays_max = {city_id: 3 for city_id in city_ids if city_id != home}
 
 tic = date(2021, 1,  1)

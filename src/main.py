@@ -13,8 +13,8 @@ Main parameters
 """
 
 # Which instance?
-from instance_top10 import *
-#from instance_top20 import *
+#from instance_top10 import *
+from instance_top20 import *
 
 # Flags
 flag_get_city_ids = True # Use place_names to assign city_ids?
