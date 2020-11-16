@@ -28,7 +28,6 @@ mapping = {
     'Taipei'                         : 'TPET-sky',
     'Jeddah'                         : 'JEDA-sky'
 }
-}
 
 place_names = mapping.keys()
 city_ids    = mapping.values()
