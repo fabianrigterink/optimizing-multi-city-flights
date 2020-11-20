@@ -1,0 +1,48 @@
+Solving...
+# ==========================================================
+# = Solver Results                                         =
+# ==========================================================
+# ----------------------------------------------------------
+#   Problem Information
+# ----------------------------------------------------------
+Problem:
+- Lower bound: -inf
+  Upper bound: inf
+  Number of objectives: 1
+  Number of constraints: 15098
+  Number of variables: 15912
+  Sense: unknown
+# ----------------------------------------------------------
+#   Solver Information
+# ----------------------------------------------------------
+Solver:
+- Status: ok
+  Message: CPLEX 12.10.0.0\x3a optimal integer solution; objective 2364.00000000006; 146715 MIP simplex iterations; 1474 branch-and-bound nodes
+  Termination condition: optimal
+  Id: 2
+# ----------------------------------------------------------
+#   Solution Information
+# ----------------------------------------------------------
+Solution:
+- number of solutions: 0
+  number of solutions displayed: 0
+      origin destination outbound_date  quote
+0   NYCA-sky    LOND-sky    2021-01-10  186.0
+1   LOND-sky    ANTA-sky    2021-01-12   69.0
+2   ANTA-sky    ISTA-sky    2021-01-15   25.0
+3   ISTA-sky    JEDA-sky    2021-01-18  145.0
+4   JEDA-sky    KULM-sky    2021-01-20  338.0
+5   KULM-sky    SINS-sky    2021-01-22   46.0
+6   SINS-sky    CSZX-sky    2021-01-24  268.0
+7   CSZX-sky    TPET-sky    2021-01-27  302.0
+8   TPET-sky    TYOA-sky    2021-01-30  100.0
+9   TYOA-sky    HKGA-sky    2021-02-01  109.0
+10  HKGA-sky    HKTT-sky    2021-02-04   90.0
+11  HKTT-sky    BKKT-sky    2021-02-06   17.0
+12  BKKT-sky    IDEL-sky    2021-02-08  110.0
+13  IDEL-sky    IBOM-sky    2021-02-11   55.0
+14  IBOM-sky    DXBA-sky    2021-02-13  110.0
+15  DXBA-sky    ROME-sky    2021-02-15  196.0
+16  ROME-sky    PARI-sky    2021-02-18   44.0
+17  PARI-sky    NYCA-sky    2021-02-21  154.0
+Solve time: 614.7037055492401 seconds

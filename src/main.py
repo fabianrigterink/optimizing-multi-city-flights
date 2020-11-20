@@ -4,7 +4,9 @@ from client_solver import ClientSolver
 from datetime import timedelta
 
 import itertools
+import os
 import pandas as pd
+import sys
 import time
 import tqdm
 
@@ -16,9 +18,13 @@ Main parameters
 #from instance_top10 import *
 from instance_top20 import *
 
+# Which formulation?
+#formulation=ClientSolver.FORMULATION_DFJ
+formulation=ClientSolver.FORMULATION_MTZ
+
 # Flags
-flag_get_city_ids = True # Use place_names to assign city_ids?
-flag_get_quotes   = True # Get quotes for every combination of city_ids and day?
+flag_get_city_ids = False # Use place_names to assign city_ids?
+flag_get_quotes   = False # Get quotes for every combination of city_ids and day?
 flag_solve        = True # Solve the problem?
 
 """
@@ -51,16 +57,36 @@ quotes_file = 'data/quotes_{}.csv'.format(instance_name)
 if flag_get_quotes:
     print('### Getting quotes...')
 
-    quotes = pd.DataFrame()
-
-    def get_dates(tic=None, toc=None):
-        delta = toc - tic
-        for i in range(delta.days + 1):
-            yield tic + timedelta(days=i)
-
-    dates = list(get_dates(tic=tic, toc=toc))
-    tuples = [(origin, destination, outbound_date) for (origin, destination, outbound_date) in list(itertools.product(city_ids, city_ids, dates)) if origin != destination]
+    quotes = None
     
+    # Check if the quotes file exists
+    if not os.path.exists(quotes_file):
+        print('Quotes file doesn\'t exist. Create it.')
+
+        def get_dates(tic=None, toc=None):
+            delta = toc - tic
+            for i in range(delta.days + 1):
+                yield tic + timedelta(days=i)
+
+        dates = list(get_dates(tic=tic, toc=toc))
+        tuples = [(origin, destination, outbound_date) for (origin, destination, outbound_date) in list(itertools.product(city_ids, city_ids, dates)) if origin != destination]
+
+        quotes = pd.DataFrame(tuples, columns=['origin', 'destination', 'outbound_date'])
+        # Initialize the DataFrame with None entries
+        quotes['quote'] = None
+
+        quotes.to_csv(quotes_file, index=False)
+    else:
+        print('Quotes file exists. Read it.')
+
+        quotes = pd.read_csv(quotes_file)
+
+        # Keep only the None entries
+        quotes_null = quotes[quotes['quote'].isnull()]
+        
+        tuples = list(zip(quotes_null['origin'], quotes_null['destination'], quotes_null['outbound_date']))
+
+    checkpoint = 10
     for t in tqdm.trange(len(tuples)):
         (origin, destination, outbound_date) = tuples[t]
         while True:
@@ -68,28 +94,31 @@ if flag_get_quotes:
             if status_code == 200:
                 break
             else:
-                print(quotes)
                 time.sleep(60) # Sleep for 60 seconds, then retry
-        d = {
-            'origin'        : origin,
-            'destination'   : destination,
-            'outbound_date' : outbound_date,
-            'quote'         : result
-        }
-        quotes = quotes.append(d, ignore_index=True)
+        
+        quotes.loc[(quotes['origin'] == origin) & (quotes['destination'] == destination) & (quotes['outbound_date'] == outbound_date), 'quote'] = result if result is not None else sys.maxsize
+        if (t + 1) % checkpoint == 0:
+            print(quotes)
+            quotes.to_csv(quotes_file, index=False)
 
     print(quotes)
-
     quotes.to_csv(quotes_file, index=False)
 
 # 3. Solve
 
 if flag_solve:
-    print('### Solving...')
-
     quotes = pd.read_csv(quotes_file)
 
-    client_solver = ClientSolver()
+    client_solver = ClientSolver(formulation=formulation)
+
+    print('Generating model...')
     client_solver.generate_model()
+
+    print('Generating instance...')
     client_solver.generate_instance(instance_name=instance_name, home=home, quotes=quotes, stays_min=stays_min, stays_max=stays_max)
+
+    print('Solving...')
+    tic = time.time()
     client_solver.solve()
+    toc = time.time()
+    print('Solve time: {} seconds'.format(toc - tic))

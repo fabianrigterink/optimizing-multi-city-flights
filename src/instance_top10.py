@@ -4,9 +4,9 @@ See https://www.cnn.com/travel/article/most-visited-cities-euromonitor-2019/inde
 and https://go.euromonitor.com/white-paper-travel-2019-100-cities.
 """
 
-from datetime import date
+from datetime import date, timedelta
 
-instance_name = 'top10'
+instance_name = 'top10_20201117'
 
 mapping = {
     'Hong Kong'     : 'HKGA-sky', # Includes Macau
@@ -29,4 +29,4 @@ stays_min = {city_id: 2 for city_id in city_ids if city_id != home}
 stays_max = {city_id: 3 for city_id in city_ids if city_id != home}
 
 tic = date(2021, 1,  1)
-toc = date(2021, 1, 31)
+toc = tic + timedelta(days=sum(stays_max.values()))

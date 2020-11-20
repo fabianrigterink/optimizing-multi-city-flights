@@ -5,11 +5,21 @@ import pandas as pd
 import sys
 
 class ClientSolver():
+    FORMULATION_DFJ = 'Dantzig, Fulkerson, Johnson, 1954'
+    FORMULATION_MTZ = 'Miller, Tucker, Zemlin, 1960'
+
+    formulation = None
     model = None
     instance = None
 
-    def __init__(self):
-        pass
+    def __init__(self, formulation=None):
+        if formulation == self.FORMULATION_DFJ:
+            self.formulation = self.FORMULATION_DFJ
+        elif formulation == self.FORMULATION_MTZ:
+            self.formulation = self.FORMULATION_MTZ
+        else:
+            print('Formulation must be either FORMULATION_DFJ or FORMULATION_MTZ. Exit.')
+            sys.exit()
 
     def generate_model(self):
         self.model = pyo.AbstractModel()
@@ -31,7 +41,7 @@ class ClientSolver():
         self.model.sMin = pyo.Param(self.model.N, within=pyo.NonNegativeIntegers)
         self.model.sMax = pyo.Param(self.model.N, within=pyo.NonNegativeIntegers)
 
-        self.model.c = pyo.Param(self.model.N0, self.model.N0, self.model.T, within=pyo.NonNegativeReals, default=sys.maxsize)
+        self.model.c = pyo.Param(self.model.N0, self.model.N0, self.model.T, within=pyo.NonNegativeReals)
 
         # Variables
         self.model.x = pyo.Var(self.model.N0, self.model.N0, self.model.T, domain=pyo.Binary)
@@ -52,12 +62,23 @@ class ClientSolver():
         self.model.Con2 = pyo.Constraint(self.model.N0, rule=con2_rule)
 
         # Constraint 3: subtour elimination
-        def con3_rule(model, k):
-            if len(model.S[k]) >= 1 and len(model.S[k]) < model.n:
-                return sum(model.x[i, j, t] for (i, j, t) in list(itertools.product(model.S[k], model.N0, model.T)) if j not in model.S[k]) >= 1
-            else:
-                return pyo.Constraint.Feasible
-        self.model.Con3 = pyo.Constraint(self.model.N0N0, rule=con3_rule)
+        if self.formulation == self.FORMULATION_DFJ:
+            def con3_rule(model, k):
+                if len(model.S[k]) >= 1 and len(model.S[k]) < model.n:
+                    return sum(model.x[i, j, t] for (i, j, t) in list(itertools.product(model.S[k], model.N0, model.T)) if j not in model.S[k]) >= 1
+                else:
+                    return pyo.Constraint.Feasible
+            self.model.Con3 = pyo.Constraint(self.model.N0N0, rule=con3_rule)
+        elif self.formulation == self.FORMULATION_MTZ:
+            def con3_rule(model, i, j, t):
+                t_index = sum(index for index in range(1, len(model.T)+1) if model.T[index] == t)
+                t = t_index
+                if i != j:
+                    return sum(model.x[j, ip, model.T[tp]] for (ip, tp) in list(itertools.product(model.N0, range(1, len(model.T)+1))) if ip != j and tp >= t + model.sMin[j]) \
+                        >= model.x[i, j, model.T[t]]
+                else:
+                    return pyo.Constraint.Feasible
+            self.model.Con3 = pyo.Constraint(self.model.N0, self.model.N, self.model.T, rule=con3_rule)
 
         # Constraint 4a: minimum time of stay
         def con4a_rule(model, j):
